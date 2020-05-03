@@ -16,7 +16,7 @@ app.use(express.json());
 
 app.use(express.static("public"));
 
-mongoose.connect(URL + "budget", {
+mongoose.connect(URL + "heroku_jx2x0c6q", {
   useNewUrlParser: true,
   useFindAndModify: false
 });
