@@ -23,6 +23,7 @@ mongoose.connect(URL + "heroku_jx2x0c6q", {
 
 // routes
 app.use(require("./routes/api.js"));
+app.use(require("./routes/htmlRoutes"));
 
 app.listen(PORT, () => {
   console.log(`App running on port ${PORT}!`);
