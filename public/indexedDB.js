@@ -48,16 +48,25 @@ function checkDatabase() {
     all.onsuccess = function() {
         //if there is anything to add we will call the bulk transaction api to post it
         if(all.result.length > 0) {
-            fetch("api/transaction/bulk", {
+            console.log("Sending bulk transactions: ", all.result);
+            fetch("/api/transaction/bulk", {
                 method: "POST",
-                body: JSON.stringify(all.result)
+                body: JSON.stringify(all.result),
+                headers: {
+                    Accept: "application/json, text/plain, */*",
+                    "Content-Type": "application/json"
+                  }
             }).then(response => response.json())
-                .then(() => {
-                    //if that worked, we will open the pending transactions and clear them out
-                    const transaction = database.transaction(["pendingTransactions"], "readWrite");
-                    const store = transaction.objectStore("pendingTransactions");
-                    store.clear();
-                });
+            .then(() => {
+                // if successful, open a transaction on your pending db
+                const transaction = database.transaction(["pendingTransactions"], "readwrite");
+        
+                // access your pending object store
+                const store = transaction.objectStore("pendingTransactions");
+        
+                // clear all items in your store
+                store.clear();
+              });
         }
     };
 }
