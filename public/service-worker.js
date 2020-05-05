@@ -11,26 +11,41 @@ const FILES_TO_CACHE = [
     "styles.css"
 ];
 
+//declared caches
+//our cache for storing our files
 const CACHE_NAME = "static-cache-v2";
+//our cache for storing data
 const DATA_CACHE_NAME = "data-cache-v1";
 
-// install
-self.addEventListener("install", function(evt) {
-  evt.waitUntil(
+// install the service worker when the page loads
+self.addEventListener("install", function(event) {
+  
+  //make the service worker wait
+  event.waitUntil(
+    
+    //open or create our cache
     caches.open(CACHE_NAME).then(cache => {
       console.log("Your files were pre-cached successfully!");
+      
+      //cache our files that we need
       return cache.addAll(FILES_TO_CACHE);
     })
   );
 
+  //make the service worker stop waiting
   self.skipWaiting();
 });
 
-// activate
-self.addEventListener("activate", function(evt) {
-  evt.waitUntil(
+// activate the service worker
+//when the page goes active, the service worker will check if the cache needs updating
+self.addEventListener("activate", function(event) {
+  event.waitUntil(
+    
+    //find and wait on the keys
     caches.keys().then(keyList => {
       return Promise.all(
+        
+        //go through all of our caches, and delete ones that are irrelivent
         keyList.map(key => {
           if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
             console.log("Removing old cache data", key);
@@ -44,26 +59,36 @@ self.addEventListener("activate", function(evt) {
   self.clients.claim();
 });
 
-// fetch
-self.addEventListener("fetch", function(evt) {
-  if (evt.request.url.startsWith(self.location.origin)) {
-    evt.respondWith(
+// fetch our cache from storage
+self.addEventListener("fetch", function(event) {
+  
+  //get the request and see if this service worker needs to do anything
+  if (event.request.url.startsWith(self.location.origin)) {
+    //if the fetch comes back with it does need to do something, determine what
+    //this first will open the current data cache on file, and also try to pull one from the server
+    
+    event.respondWith(
       caches.open(DATA_CACHE_NAME).then(cache => {
-        return fetch(evt.request)
+        return fetch(event.request)
           .then(response => {
-            // If the response was good, clone it and store it in the cache.
+            
+            //responce 200, the request came back with info, put it up to the app, and also keep a copy for the cache.
             if (response.status === 200) {
-              cache.put(evt.request.url, response.clone());
+              cache.put(event.request.url, response.clone());
             }
 
             return response;
           })
-          .catch(err => {
-            // Network request failed, try to get it from the cache.
-            return cache.match(evt.request);
+          .catch(error => {
+            
+            //some sort of error receiving data? Must be offline or something, search for what we might need in the cache instead
+            //and allow the program to still run
+            return cache.match(event.request);
           });
-      }).catch(err => console.log(err))
+          //that didn't work? give us our error
+      }).catch(error => console.log(error))
     );
 
+    //end
     return;
 }});

@@ -15,6 +15,7 @@ request.onsuccess = function(event) {
 
     //this if statement will check to see if we are working in online, or offline mode
     if(navigator.onLine){
+        
         //this function will write all of our pending transactions if we are online, and if we have pending transactions to post
         checkDatabase();
     }
@@ -25,27 +26,34 @@ request.onerror = function(event) {
     console.log(event.target.errorCode);
 };
 
-//declared functions, saveRecord function will be exported
+//declared functions, saveRecord function will be exported, or called in the index.html
 
 //saveRecord will be called by the index.js file if we are working offline, it will create a pending transaction to be done the next time the application goes online
 function saveRecord(record){
+    
     //create a new Transaction
     const transaction = database.transaction(["pendingTransactions"], "readwrite");
+    
     //this variable will represent our objectStore
     const store = transaction.objectStore("pendingTransactions");
+    
     //add the pending transaction
     store.add(record);
 }
 
 function checkDatabase() {
+    
     //open up our list of pending saved transactions
     const transaction = database.transaction(["pendingTransactions"], "readwrite");
+    
     //access pending objects
     const store = transaction.objectStore("pendingTransactions");
+    
     //ues the getAll function to get all the pending transactions
     const all = store.getAll();
 
     all.onsuccess = function() {
+        
         //if there is anything to add we will call the bulk transaction api to post it
         if(all.result.length > 0) {
             console.log("Sending bulk transactions: ", all.result);
@@ -58,13 +66,14 @@ function checkDatabase() {
                   }
             }).then(response => response.json())
             .then(() => {
-                // if successful, open a transaction on your pending db
+                
+                //This will set a variable to the database, and allow it to read and write on it.
                 const transaction = database.transaction(["pendingTransactions"], "readwrite");
         
-                // access your pending object store
+                //access the pending transactions objectstore in the transaction database
                 const store = transaction.objectStore("pendingTransactions");
         
-                // clear all items in your store
+                //once completed, this function will clear the pending transactions database
                 store.clear();
               });
         }
